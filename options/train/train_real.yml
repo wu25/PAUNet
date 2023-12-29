@@ -1,0 +1,111 @@
+
+
+# general settings
+name: real_dim=64_[4,4,4]_[6]_[4,4,4]_300000
+model_type: ImageCleanModel
+scale: 1
+num_gpu: '0' # official: 8 GPUs
+manual_seed: 10
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: PairedImageDataset
+    type: PairedImageDataset
+    dataroot_lq: /home/amax/Desktop/Dataset/Private/SIDD_patches/train/input.lmdb
+    dataroot_gt: /home/amax/Desktop/Dataset/Private/SIDD_patches/train/groundtruth.lmdb
+    geometric_augs: true
+    gt_size: 256
+    filename_tmpl: '{}'
+    io_backend:
+      type: lmdb
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 12
+    batch_size_per_gpu: 4
+#    mini_batch_sizes: [ 8,4,2,1 ]             # Batch size per gpu
+#    iters: [ 40000,40000,40000,40000 ]
+
+  val:
+    name: PairedImageDataset
+    type: PairedImageDataset
+    dataroot_gt:  /home/amax/Desktop/Dataset/Private/SIDD_patches/val/groundtruth.lmdb
+    dataroot_lq: /home/amax/Desktop/Dataset/Private/SIDD_patches/val/input.lmdb
+    io_backend:
+      type: lmdb
+
+# network structures
+network_g:
+  type: PAUNet
+  img_channel: 3
+  width: 64
+  enc_blk_nums: [4,4,4]
+  middle_blk_num: 6
+  dec_blk_nums: [ 4,4,4 ]
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  use_grad_clip: true
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 1.5e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: CosineAnnealingRestartLR
+    periods: [300000]
+    restart_weights: [1]
+    eta_min: !!float 1e-6
+
+  total_iter: 300000
+  warmup_iter: -1  # no warm up
+
+  # losses
+  mir_opt:
+    type: CLoss
+    loss_weight: 1.0
+    eps: !!float 1e-3
+
+# validation settings
+val:
+  window_size: 0
+  val_freq: 4000
+  save_img: false
+  rgb2bgr: true
+  use_image: false
+  max_minibatch: 2
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+    ssim: # metric name, can be arbitrary
+      type: calculate_ssim
+      crop_border: 0
+      test_y_channel: false
+
+# logging settings
+logger:
+  print_freq: 1000
+  save_checkpoint_freq: 100000
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500
+
+find_unused_parameters: true

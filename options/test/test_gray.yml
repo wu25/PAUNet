@@ -1,0 +1,59 @@
+
+
+# general settings
+name: test_gray_Urbun_50
+model_type: ImageCleanModel
+scale: 1
+num_gpu: '0' # official: 8 GPUs
+manual_seed: 0
+
+# dataset and data loader settings
+datasets:
+#  test:
+#    name: BSD68_50
+#    type: Dataset_GaussianDenoising
+#    dataroot_gt: /home/amax/Desktop/Dataset/Private/wjf/BSD68
+#    dataroot_lq: none
+#    sigma_test: 50
+#    in_ch: 1  ## RGB image
+#    io_backend:
+#      type: disk
+
+
+
+
+
+# network structures
+network_g:
+  type: PAUNet
+  img_channel: 1
+  width: 64
+  enc_blk_nums: [ 4,4,4 ]
+  middle_blk_num: 6
+  dec_blk_nums: [ 4,4,4 ]
+# path
+path:
+  pretrain_network_g: 
+  strict_load_g: true
+  resume_state:
+
+# training settings
+
+val:
+  window_size: 0
+  save_img: true
+  rgb2bgr:  false
+  use_image: true
+  max_minibatch: 4
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+    ssim: # metric name, can be arbitrary
+      type: calculate_ssim
+      crop_border: 0
+      test_y_channel: false
+
